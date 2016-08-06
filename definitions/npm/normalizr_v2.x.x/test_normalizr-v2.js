@@ -1,5 +1,5 @@
 // @flow
-import { Schema } from 'normalizr';
+import { Schema, arrayOf, unionOf, valuesOf, normalize } from 'normalizr';
 
 // Test Schema API
 // =========================
@@ -59,7 +59,81 @@ const schemaWithBadAssignEntity = new Schema('articles', {
 const schemaWithBadAssignEntityArgs = new Schema('articles', {
     assignEntity(normalized, key, value, originalInput, schema) {
 
-        // $ExpectError - should be the same schema
+        // ExpectError - should be the same schema
         const theKey: 'users' = schema.getKey();
+    },
+});
+
+
+// unionOf
+// =========================
+
+// The schemaAttribute is requried
+// $ExpectError
+const noSchemaAttribute = unionOf(schema);
+
+const unionSchema = unionOf(schema, { schemaAttribute: 'type' });
+
+const itemSchemaKey: 'articles' = unionSchema.getItemSchema().getKey();
+
+const unionSchemaWithFnAttribute = unionOf(schema, {
+    schemaAttribute: () => 'type'
+});
+
+
+// arrayOf
+// =========================
+const arraySchema = arrayOf(schema);
+const arraySchemaItemKey: 'articles' = arraySchema.getItemSchema().getKey();
+
+const arraySchemaWithOptions = arrayOf(schema, {
+    schemaAttribute: 'type'
+});
+
+const arraySchemaWithOptionsAndFnAttribute = arrayOf(schema, {
+    schemaAttribute: () => 'type'
+});
+
+
+// valuesOf
+// =========================
+const valuesSchema = valuesOf(schema);
+const valuesSchemaItemKey: 'articles' = arraySchema.getItemSchema().getKey();
+
+const valuesSchemaWithOptions = valuesOf(schema, {
+    schemaAttribute: 'type'
+});
+
+const valuesSchemaWithOptionsAndFnAttribute = arrayOf(schema, {
+    schemaAttribute: () => 'type'
+});
+
+
+// normalize
+// =========================
+const obj = { my: 'stuff' };
+
+// $ExpectError
+const notAnObject = normalize('nope');
+
+// $ExpectError
+const notASchema = normalize(obj, 'nope');
+
+const normalized = normalize(obj, schema);
+
+const entities = normalized.entities;
+const result = normalized.result;
+
+const normalizedAssignEntity = normalize(obj, schema, {
+    assignEntity(normalized, key, value, originalInput, schema) {
+        normalized[key] = value;
+        originalInput[key] = value;
+
+        const theKey = schema.getKey();
+    },
+});
+
+const normalizedMergeIntoEntity = normalize(obj, schema, {
+    mergeIntoEntity(stored, normalized, entityKey) {
     },
 });
